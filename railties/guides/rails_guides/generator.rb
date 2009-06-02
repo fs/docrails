@@ -14,7 +14,7 @@ module RailsGuides
         FileUtils.mkdir(@output)
       end
 
-      @view_path = File.join(@guides_dir, "source")
+      @view_path = File.join(@guides_dir, "source", "ru-RU")
     end
 
     def generate
