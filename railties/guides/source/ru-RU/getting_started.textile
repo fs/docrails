@@ -57,84 +57,83 @@ h5. Контроллеры
 
 Контроллеры представляют из себя "связующее звено" между моделями и представлениями. В Rails контроллеры отвечают за обработку запросов, поступающих от веб браузера, запрашивая данные в моделях и передавая эти данные в представления для вывода на экран.
 
-h4. The Components of Rails
+h4. Rails компоненты
 
-Rails provides a full stack of components for creating web applications, including:
+Rails предоставляет полный набор компонентов для создания веб приложений, включая:
 
-* Action Controller
-* Action View
-* Active Record
-* Action Mailer
-* Active Resource
+* Действие контроллера
+* Действие представления
+* Действие записи
+* Действие отправления
+* Действие ресурса
 * Railties
-* Active Support
+* Активная Поддержка
 
-h5. Action Controller
+h5. Действие контроллера
 
-Action Controller is the component that manages the controllers in a Rails application. The Action Controller framework processes incoming requests to a Rails application, extracts parameters, and dispatches them to the intended action. Services provided by Action Controller include session management, template rendering, and redirect management.
+Действие контроллера - это компонент, который управляет контроллерами в Rails приложении. Среда разработки Action Controller обрабатывает входящие запрос к Rails приложению, извлекает параметры и отправляет их предполагаемому действию. Сервисы, предоставляемые Action Контроллером включают управление сессиями, рендеринг шаблона и управление переадресацией.
 
-h5. Action View
+h5. Действие представления
 
-Action View manages the views of your Rails application. It can create both HTML and XML output by default. Action View manages rendering templates, including nested and partial templates, and includes built-in AJAX support.
+Действие представления управляется представлениями Rails приложения. Оно может выводить данные как HTML, так и XML формате. Действие представления управляет рендерингом шаблонов, включая вложенные и составные шаблоны, а также включая встроенную поддержку технлогии AJAX.
 
-h5. Active Record
+h5. Действие записи
 
-Active Record is the base for the models in a Rails application. It provides database independence, basic CRUD functionality, advanced finding capabilities, and the ability to relate models to one another, among other services.
+Действие записи - это база для моделей в Rails приложении. Действие записи предоставляет независимость базы данных, основную CRUD функциональность, расширенные возможности поиска и связи моделей между собой, не говоря о других сервисах.
 
-h5. Action Mailer
+h5. Действие отправления
 
-Action Mailer is a framework for building e-mail services. You can use Action Mailer to send emails based on flexible templates, or to receive and process incoming email.
+Действие отправления является средой для разработки сервис электронной почты. Вы можете использовать Действие отправления для отсылки электронной почты, основываясь на гибких шаблонах, или для получения и обработки входящей электронной почты.
 
-h5. Active Resource
+h5. Действие ресурса
 
-Active Resource provides a framework for managing the connection between business objects and RESTful web services. It implements a way to map web-based resources to local objects with CRUD semantics.
+Действие ресурса представляет из себя среду разработки для управления соединением между бизнес объектами и веб сервисами RESTful. Оно позволяет создавать карты веб ресурсов к локальным объектом с CRUD семантикой.
 
 h5. Railties
 
-Railties is the core Rails code that builds new Rails applications and glues the various frameworks together in any Rails application.
+Railties - это основной Rails код, на котором строятся новые Rails приложения и объединяются различные оболочки разработки в любом Rails приложении.
 
-h5. Active Support
+h5. Активная Поддержка
 
-Active Support is an extensive collection of utility classes and standard Ruby library extensions that are used in the Rails, both by the core code and by your applications.
+Активная Поддержка - это обширная коллекция collection of полезных классов и стандартных расширений Ruby библиотек, которые используются в Rails, как основным кодом, так и вашими приложениями.
 
 h4. REST
 
-The foundation of the RESTful architecture is generally considered to be Roy FieldingвЂ™s doctoral thesis, "Architectural Styles and the Design of Network-based Software Architectures":http://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm. Fortunately, you need not read this entire document to understand how REST works in Rails. REST, an acronym for Representational State Transfer, boils down to two main principles for our purposes:
+Основа RESTful архитектуры соответствует докторским тезисам Роя Филдинга, "Архитектурные стили и Дизайн Архитектуры Сетевого Программного Обеспечения":http://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm. К счастью, вам не нужно читать весь документ для понимания работы REST в Rails. REST является акронимом для Репрезентативного Трансфера Состояний и основывается на двух главных принципов, исходя из Наших целей:
 
-* Using resource identifiers (which, for the purposes of discussion, you can think of as URLs) to represent resources
-* Transferring representations of the state of that resource between system components.
+* Использование идентификаторов ресурсов (которые, для целей обсуждения, могут считать URLами) для репрезентации ресурсов
+* Перемещение репрезентаций состояния данного ресурса между системными компонентами.
 
-For example, to a Rails application a request such as this:
+например, следующий запрос к Rails приложению:
 
 <tt>DELETE /photos/17</tt>
 
-would be understood to refer to a photo resource with the ID of 17, and to indicate a desired action - deleting that resource. REST is a natural style for the architecture of web applications, and Rails makes it even more natural by using conventions to shield you from some of the RESTful complexities and browser quirks.
+будет воспринят как ссылка на ресурс фотографии с ID равному 17, и отвечать за желаемое действие - удаление этого ресурса. REST является ествественным стилем архитектуры веб приложений, и Rails является еще более естественным путем использования правил для защиты вас от сложностей RESTful и проблем браузера.
 
-If youвЂ™d like more details on REST as an architectural style, these resources are more approachable than FieldingвЂ™s thesis:
+Если вы хотели бы более деталльно изучить REST с точки зрения архитектурного стиля, следующие ресурсы являются более понятными, чем тезисы Филдинга:
+* "Краткое введение в REST":http://www.infoq.com/articles/rest-introduction Стефан Тилков
+* "Введение в REST":http://bitworking.org/news/373/An-Introduction-to-REST (видео учебник) Джо Грегорио
+* "Репрезентативный Трансфер Состояний":http://en.wikipedia.org/wiki/Representational_State_Transfer статья в Википедии
+* "Как ПОЛУЧИТЬ чашечку кофе":http://www.infoq.com/articles/webber-rest-workflow Джим Веббер, Савас Парастатидис & Ян Робинсон
 
-* "A Brief Introduction to REST":http://www.infoq.com/articles/rest-introduction by Stefan Tilkov
-* "An Introduction to REST":http://bitworking.org/news/373/An-Introduction-to-REST (video tutorial) by Joe Gregorio
-* "Representational State Transfer":http://en.wikipedia.org/wiki/Representational_State_Transfer article in Wikipedia
-* "How to GET a Cup of Coffee":http://www.infoq.com/articles/webber-rest-workflow by Jim Webber, Savas Parastatidis & Ian Robinson
+h3. Создание Нового Rails проекта
 
-h3. Creating a New Rails Project
+В данном руководстве далее вы сможете создать Rails проект под названием<tt>blog</tt>, очень простой веблог.Перед началом создания данного приложения вам следует убедиться что у вас установлена платформа Rails.
 
-If you follow this guide, youвЂ™ll create a Rails project called <tt>blog</tt>, a (very) simple weblog. Before you can start building the application, you need to make sure that you have Rails itself installed.
+h4. Установка Rails
 
-h4. Installing Rails
-
-In most cases, the easiest way to install Rails is to take advantage of RubyGems:
+Во многих случаях, самым простым способом установки Rails является получение преимущества от RubyGems:
 
 <shell>
 $ gem install rails
 </shell>
 
-NOTE. There are some special circumstances in which you might want to use an alternate installation strategy:
+Внимание. При определенных обстоятельствах вы можете предпочесть использовать алтернативную стратегию установки:
 
-* If youвЂ™re working on Windows, you may find it easier to install Instant Rails. Be aware, though, that "Instant Rails":http://instantrails.rubyforge.org/wiki/wiki.pl releases tend to lag seriously behind the actual Rails version. Also, you will find that Rails development on Windows is overall less pleasant than on other operating systems. If at all possible, we suggest that you install a Linux virtual machine and use that for Rails development, instead of using Windows.
-* If you want to keep up with cutting-edge changes to Rails, youвЂ™ll want to clone the "Rails source code":http://github.com/rails/rails/tree/master from github. This is not recommended as an option for beginners, though.
+* Если вы работаете в ОС Windows, вам будет проще установить Instant Rails. Однако имейте ввиду, что "Имеющиеся Rails":http://instantrails.rubyforge.org/wiki/wiki.pl релизы имеют тенденцию серьезно отставать от текущей версии Rails. Вы также обнаружите, что Rails разработка в ОС Windows менее приятна, чем в других ОС. Если возможно, мы бы рекомендовали установить виртуальную машину с Linux для Rails разработки, вместо использования Windows.
+* Если вы хотите использовать последние изменения Rails, вы можете склонировать "исходный код Rails":http://github.com/rails/rails/tree/master для github. Хотя этого не рекомендуется делать начинающих.
 
-h4. Creating the Blog Application
+h4. Создание Блог Приложения
 
 Open a terminal, navigate to a folder where you have rights to create files, and type:
 
