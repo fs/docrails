@@ -207,10 +207,10 @@ User.find_each(:batch_size => 5000, :start => 2000) do |user|
   NewsLetter.weekly_deliver(user)
 end
 </ruby>
-................................................................................
-*Additional options*
 
-+find_each+ accepts the same options as the regular +find+ method. However, +:order+ and +:limit+ are needed internally and hence not allowed to be passed explicitly.
+*Дополнительные опции*
+
++find_each+ поддерживает теже параметры что и +find+ метод. Однако, +:order+ and +:limit+ are needed internally and hence not allowed to be passed explicitly.
 
 h5. +find_in_batches+
 
@@ -225,62 +225,60 @@ end
 
 The above will yield the supplied block with +1000+ invoices every time.
 
-h3. Conditions
+h3. Условия
 
-The +find+ method allows you to specify conditions to limit the records returned, representing the +WHERE+-part of the SQL statement. Conditions can either be specified as a string, array, or hash.
+Метод +find+ позволяет определять условия выборки для ограничения количества возвращаемых записей, которое являеться +WHERE+-частью SQL запроса. Условие может быть определено как строкой(string), так и массивом(array) и хэш(hash).
 
-h4. Pure String Conditions
+h4. Строковые(String) Условия
+Если вы хотите указать условие поиска, Вы можете это сделать следующим образом: +Client.first(:conditions => "orders_count = '2'")+. Результатом данного поиска будут записи из таблицы с клиентами, у которых поле +orders_count+ имеет значение 2.
 
-If you'd like to add conditions to your find, you could just specify them in there, just like +Client.first(:conditions => "orders_count = '2'")+. This will find all clients where the +orders_count+ field's value is 2.
+ПРЕДУПРЕЖДЕНИЕ: Строковые(string) условия не безопасны перед SQL инъекциями (SQL injection). Например, +Client.first(:conditions => "name LIKE '%#{params[:name]}%'")+ - не безопасно. Прочитайте следующий вид определения условий с помощью массивов (array), который являеться более безопасным.
 
-WARNING: Building your own conditions as pure strings can leave you vulnerable to SQL injection exploits. For example, +Client.first(:conditions => "name LIKE '%#{params[:name]}%'")+ is not safe. See the next section for the preferred way to handle conditions using an array.
-
-h4. Array Conditions
-
-Now what if that number could vary, say as an argument from somewhere, or perhaps from the user's level status somewhere? The find then becomes something like:
+h4. Использование массива (array) для определения условия
+А что если число изменяется в зависимости от переданных параметров или от уровня статуса пользователя где-нибудь? Тогда поиск клиента будет выглядеть например так:
 
 <ruby>
 Client.first(:conditions => ["orders_count = ?", params[:orders]])
 </ruby>
 
-Active Record will go through the first element in the conditions value and any additional elements will replace the question marks +(?)+ in the first element.
-
-Or if you want to specify two conditions, you can do it like:
+Active Record заменяет знаки вопросов +(?)+ в первом переданном параметре на параметры, переданные следом.
+Если Вы хотите указать два условия, то это можно сделать так:
 
 <ruby>
 Client.first(:conditions => ["orders_count = ? AND locked = ?", params[:orders], false])
 </ruby>
 
-In this example, the first question mark will be replaced with the value in +params[:orders]+ and the second will be replaced with the SQL representation of +false+, which depends on the adapter.
+В данном примере, первый знак вопроса заменеться на значение  +params[:orders]+ и второй на значение +false+ в SQL представлении, которое зависит от адаптера.
 
-The reason for doing code like:
+
+Причина правильности применения данного способа:
 
 <ruby>
 Client.first(:conditions => ["orders_count = ?", params[:orders]])
 </ruby>
 
-instead of:
+а не этого:
 
 <ruby>
 Client.first(:conditions => "orders_count = #{params[:orders]}")
 </ruby>
 
-is because of argument safety. Putting the variable directly into the conditions string will pass the variable to the database *as-is*. This means that it will be an unescaped variable directly from a user who may have malicious intent. If you do this, you put your entire database at risk because once a user finds out he or she can exploit your database they can do just about anything to it. Never ever put your arguments directly inside the conditions string.
+заключается в безопасности подставляемых параметров в SQL запрос. В запросе, переданном через строку (string), параметры посылаются в базу данных "как есть". Это означает, что это буду необработанные переменные, значение которых определяет пользователь и, возможно, со злым умыслом. Если вы составляете запрос таким образом, вы подвергаете вашу базу данных риску, потому что найдя данный способ взлома, пользователь сможет с Вашими данными все что угодно. Никогда не подставляйте аргуументы таким образов в строковое (string) условие.
 
-TIP: For more information on the dangers of SQL injection, see the "Ruby on Rails Security Guide":security.html#sql-injection.
+TIP: Для получения более полной информации об опасностях SQL инъекций (injection), см. "Ruby on Rails Security Guide":security.html#sql-injection.
 
-h5. Placeholder Conditions
+h5. Placeholder Условия
 
-Similar to the +(?)+ replacement style of params, you can also specify keys/values hash in your array conditions:
+Данный способ похож на подход с заменой +(?)+ на значения параметров, только, здесь Вы можете еще и определить ключи (keys) и значения (values) хэша в вашем массиве условий:
 
 <ruby>
 Client.all(:conditions =>
   ["created_at >= :start_date AND created_at <= :end_date", { :start_date => params[:start_date], :end_date => params[:end_date] }])
 </ruby>
 
-This makes for clearer readability if you have a large number of variable conditions.
+Этот подход улучшает читаемость кода, в том случае, если у Вас большое количество условий.
 
-h5. Range Conditions
+h5. Range Условия
 
 If you're looking for a range inside of a table (for example, users created in a certain timeframe) you can use the conditions option coupled with the +IN+ SQL statement for this. If you had two dates coming in from a controller you could do something like this to look for a range:
 
