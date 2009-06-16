@@ -242,7 +242,7 @@ verify :method => :post, :only => [:transfer], :redirect_to => {:action => :list
 protect_from_forgery :secret => "123456789012345678901234567890..."
 </ruby>
 
-Теперь во все формы и Ajax-запросы сгенерированные Rails автоматически будут добавлены маркеры безопасности, вычисляемые по текущему идентификатору сессии и секретному ключу на сервере. Вам не нужен секретный ключесли Вы используете CookieStorage в качестве сессионного хранилища. Это вызовет исключение ActionController::InvalidAuthenticityToken если маркер безопасности не совпадет с ожидаемым.
+Теперь во все формы и Ajax-запросы сгенерированные Rails, автоматически будут добавлены маркеры безопасности, вычисляемые по текущему идентификатору сессии и секретному ключу на сервере. Вам не нужен секретный ключесли Вы используете CookieStorage в качестве сессионного хранилища. Это вызовет исключение ActionController::InvalidAuthenticityToken если маркер безопасности не совпадет с ожидаемым.
 
 Заметьте, что _(highlight)межсайтовый скриптинг (XSS, cross-site scripting) обходит все защиты от CSRF_. XSS предоставляет атакующему доступ ко всем элементам на странице, так что он сможет прочитать маркер безопасности из вормы или напрямую отправить форму. С этими уязвимостями мы <a href="#cross-site-scripting-xss">ознакомимся позже</a>.
 
@@ -252,9 +252,9 @@ h3. Перенаправление, работа с файлами
 
 h4. Перенаправление
 
--- _Перенаправление в веб-приложениях - это недооцененный инструмент взломщика: Not only can the attacker forward the user to a trap web site, he may also create a self-contained attack._
+-- _Перенаправление в веб-приложениях - это недооцененный инструмент взломщика: Не только атакующий может направить пользователя на сайт-ловушку, он может создать автономную атаку._
 
-Whenever the user is allowed to pass (parts of) the URL for redirection, it is possibly vulnerable. The most obvious attack would be to redirect users to a fake web application which looks and feels exactly as the original one. This so-called phishing attack works by sending an unsuspicious link in an email to the users, injecting the link by XSS in the web application or putting the link into an external site. It is unsuspicious, because the link starts with the URL to the web application and the URL to the malicious site is hidden in the redirection parameter: http://www.example.com/site/redirect?to= www.attacker.com. Here is an example of a legacy action:
+Всякий раз, когда клиенту посылается адрес (либо его часть) для перенаправления, это создает потенциальную уязвимость. Наиболее очевидной атакой будет перенаправить пользователя на поддельный сайт, который будет выглядеть как оригинальный сайт. Это так называемая атака-фишинг. Она работает посредством посылки не вызывающей подозрения ссылки пользователю по email, инъекцией через XSS в веб-приложении или помещением ссылки на другой сайт. Ссылка не вызывает подозрений, поскольку начинается настоящим адресом веб-приложения, а адрес подложного сайта скрыт в перенаправляющем параметре: http://www.example.com/site/redirect?to= www.attacker.com. Here is an example of a legacy action:
 
 <ruby>
 def legacy
@@ -262,21 +262,21 @@ def legacy
 end
 </ruby>
 
-This will redirect the user to the main action if he tried to access a legacy action. The intention was to preserve the URL parameters to the legacy action and pass them to the main action. However, it can exploited by an attacker if he includes a host key in the URL:
+Это перенаправит пользователя на действие main всякий раз, когда он попытается обратиться к действию legacy. Смысл этого в том, чтобы сохранить параметры переданные действию legacy и передать их действию main. Однако, это может использовано атакующим в качестве уязвимости, если он включит подложный URL в качестве параметра:
 
 <plain>
 http://www.example.com/site/legacy?param1=xy&param2=23&host=www.attacker.com
 </plain>
 
-If it is at the end of the URL it will hardly be noticed and redirects the user to the attacker.com host. A simple countermeasure would be to _(highlight)include only the expected parameters in a legacy action_ (again a whitelist approach, as opposed to removing unexpected parameters). _(highlight)And if you redirect to an URL, check it with a whitelist or a regular expression_.
+Поскольку подложный адрес передается в качестве последнего параметра, довольно сложно заподозрить атаку обычному пользователю. Простой мерой предотвращения данной атаки будет _(highlight)проверять перенаправляющий параметр перед тем как отправить пользователя по указанному в нём адресу_.
 
 h5. Автономный XSS
 
-Another redirection and self-contained XSS attack works in Firefox and Opera by the use of the data protocol. This protocol displays its contents directly in the browser and can be anything from HTML or JavaScript to entire images:
+Другой тип атак перенаправлением работает в Firefox и Opera через использование data-протокола. Этот протокол отображает содержимое прямо в браузере и может быть все, чем угодно, от HTML или JavaScript до изображений:
 
 +data:text/html;base64,PHNjcmlwdD5hbGVydCgnWFNTJyk8L3NjcmlwdD4K+
 
-This example is a Base64 encoded JavaScript which displays a simple message box. In a redirection URL, an attacker could redirect to this URL with the malicious code in it. As a countermeasure, _(highlight)do not allow the user to supply (parts of) the URL to be redirected to_.
+Этот пример содержит Base64 закодированные JavaScript отображающий простое сообщение в диалоговом окне. В качестве адреса перенаправления атакующий может передать такой адрес, содержащий вредоносный код. В качестве контрмеры, _(highlight)нельзя позволять пользователю изменять адрес перенаправления (или его часть)_.
 
 h4. Загрузка файлов на сервер
 
