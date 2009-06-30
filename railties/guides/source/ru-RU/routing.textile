@@ -21,12 +21,10 @@ h4. Связываем URL с кодом
 GET /patients/17
 </pre>
 
-роутинг это та часть кода которая связывает запрос с определенным местом в вашем приложения. В данном случае, приложение скорее всего запустит метод +show+ контроллера +patients+, отображающий информацию пациента с ID 17.
+то роутинг это та часть кода которая связывает запрос с определенным местом в вашем приложении. В данном случае, скорее всего будет вызван метод +show+ контроллера +patients+, отображающий информацию пациента с ID = 17.
 
-h4. Generating URLs from Code
 h4. Создание URLa из кода
 
-Routing also works in reverse. If your application contains this code:
 Рутинг работает и в обратную сторону. Если ваше приложение содержит код:
 
 <ruby>
@@ -37,47 +35,49 @@ Routing also works in reverse. If your application contains this code:
 <%= link_to "Patient Record", patient_path(@patient) %>
 </erb>
 
-Тогда роутер переведет это в ссылку c URL +http://example.com/patients/17+. Используя роутинг таким способом, Вы можете сделать ваше приложении более надежным, в сравнении с приложением использующим жестко заданные URLы в коде, так же код будет легче прочесть и понять.
+Тогда роутер переведет это в ссылку c URL +http://example.com/patients/17+. Используя роутинг таким способом, Вы можете сделать ваше приложение более надежным, по сравнению с приложением использующим жестко заданные URLы в коде. Так же код будет легче прочесть и понять.
 
-NOTE: Patient должен быть объявлен как ресурс для того, чтоб преобразование в URL через именованный роут было доступно.
+NOTE: Для того, чтоб преобразование в URL через именованный роут работало, Patient должен быть объявлен как ресурс.
 
 h3. Краткий обзор +routes.rb+
 
 There are two components to routing in Rails: the routing engine itself, which is supplied as part of Rails, and the file +config/routes.rb+, which contains the actual routes that will be used by your application. Learning exactly what you can put in +routes.rb+ is the main topic of this guide, but before we dig in let's get a quick overview.
 
-h4. Processing the File
+Роутинг состоит из 2 частей: сам роутер, который является частью Rails, и файл +config/routes.rb+, содержащий роуты которые будут использованы в вашем приложении. Изучение того, что Вы можете написать в +routes.rb+ является основной темой этого руководства, но прежде чем углубляться давайте сделаем краткий обзор.
 
-In format, +routes.rb+ is nothing more than one big block sent to +ActionController::Routing::Routes.draw+. Within this block, you can have comments, but it's likely that most of your content will be individual lines of code - each line being a route in your application. You'll find five main types of content in this file:
+h4. Обработка файла (Processing the File)
 
-* RESTful Routes
-* Named Routes
-* Nested Routes
-* Regular Routes
-* Default Routes
+По сути, +routes.rb+ это один большой блок кода передаваемый в +ActionController::Routing::Routes.draw+. В этом блоке вы можете писать комментарии, но вероятно, большая его часть будет состоять из отдельных строк(, где каждая строка - путь в ваше приложение). Вы найдете пять основных типов роутов в этом файле:
 
-Each of these types of route is covered in more detail later in this guide.
+* Ресурсы (RESTful Routes)
+* Именованные роуты (Named Routes)
+* Вложенные ресурсы (Nested Routes)
+* Обычные роуты (Regular Routes)
+* Роуты по умолчанию (Default Routes)
 
-The +routes.rb+ file is processed from top to bottom when a request comes in. The request will be dispatched to the first matching route. If there is no matching route, then Rails returns HTTP status 404 to the caller.
+Позже мы рассмотрим подробнее каждый перечисленных типов роутов.
 
-h4. RESTful Routes
+Когда призодит запрос, файл +routes.rb+ обрабатывается сверху вниз. Запрос обрабатывается первым подходящим роутом. Если пожходящего роута не находится, то Rails возврашает ошибку 404.
 
-RESTful routes take advantage of the built-in REST orientation of Rails to wrap up a lot of routing information in a single declaration. A RESTful route looks like this:
+h4. Ресурсы (REST-роуты)
+
+Ресурсы позволяют использовать преимущества REST принципов реализованных в Rails и всю информацию о роутинге записать всего одной строкой:
 
 <ruby>
 map.resources :books
 </ruby>
 
-h4. Named Routes
+h4. Именованные роуты
 
-Named routes give you very readable links in your code, as well as handling incoming requests. Here's a typical named route:
+С помощью именованных роутов можно получить легко читаемые ссылки. Например:
 
 <ruby>
 map.login '/login', :controller => 'sessions', :action => 'new'
 </ruby>
 
-h4. Nested Routes
+h4. Вложенные ресурсы
 
-Nested routes let you declare that one resource is contained within another resource. You'll see later on how this translates to URLs and paths in your code. For example, if your application includes parts, each of which belongs to an assembly, you might have this nested route declaration:
+Вложенные ресурсы позволяют объявить, что один ресурс содержится в другом. Похже Вы увидите как это объявление транслируется в URLы и пути к вашему коду. Например, если в вашем приложении есть parts, каждая из которых относится к assembly, тогда вы возможно создадите такой вложенные ресурс:
 
 <ruby>
 map.resources :assemblies do |assemblies|
@@ -85,17 +85,19 @@ map.resources :assemblies do |assemblies|
 end
 </ruby>
 
-h4. Regular Routes
+h4. Обычные роуты
 
 In many applications, you'll also see non-RESTful routing, which explicitly connects the parts of a URL to a particular action. For example,
+
+Во многих приложениях встречаются не REST-роуты, которые напрямую связывают части URL c конкретными экшенами. Например:
 
 <ruby>
 map.connect 'parts/:number', :controller => 'inventory', :action => 'show'
 </ruby>
 
-h4. Default Routes
+h4. Роуты по умолчанию
 
-The default routes are a safety net that catch otherwise-unrouted requests. Many Rails applications will contain this pair of default routes:
+Для отлова запросов которым не соответствует ни один из объявленных роутов используют роуты по умолчанию. Многие приложения содержат такую пару роутов:
 
 <ruby>
 map.connect ':controller/:action/:id'
@@ -104,9 +106,15 @@ map.connect ':controller/:action/:id.:format'
 
 These default routes are automatically generated when you create a new Rails application. If you're using RESTful routing for everything in your application, you will probably want to remove them. But be sure you're not using the default routes before you remove them!
 
+Эти роуты создаются автоматически при создании нового Rails приложения. Если вы используете только ресурсы вы можете удалить эти роуты, только убедитесь, что они не используются.
+
 h3. RESTful Routing: the Rails Default
 
+h3. REST роутинг: стандарт Rails
+
 RESTful routing is the current standard for routing in Rails, and it's the one that you should prefer for new applications. It can take a little while to understand how RESTful routing works, but it's worth the effort; your code will be easier to read and you'll be working with Rails, rather than fighting against it, when you use this style of routing.
+
+REST роутинг - текущий стандарт для роутинга в Rails...
 
 h4. What is REST?
 
