@@ -4,25 +4,20 @@ h2. Миграции
 
 Active Record tracks which migrations have already been run so all you have to do is update your source and run +rake db:migrate+. Active Record will work out which migrations should be run. It will also update your +db/schema.rb+ file to match the structure of your database.
 
+
 Migrations also allow you to describe these transformations using Ruby. The great thing about this is that (like most of Active Record's functionality) it is database independent: you don't need to worry about the precise syntax of +CREATE TABLE+ any more than you worry about variations on +SELECT *+ (you can drop down to raw SQL for database specific features). For example you could use SQLite3 in development, but MySQL in production.
 
-You'll learn all about migrations including:
 Вы узнаете все о Миграциях включая:
 
-* The generators you can use to create them
 * Генераторы для создания миграций
-* The methods Active Record provides to manipulate your database
 * Методы Active Record provides для управления Вашей базой данных
-* The Rake tasks that manipulate them
 * Задания Rake, которые управляют ими
-* How they relate to +schema.rb+
 * Как они связаны с +schema.rb+
 
 endprologue.
 
 h3. Анатомия Миграций
 
-Before I dive into the details of a migration, here are a few examples of the sorts of things you can do:
 Перед тем, как углубиться в детали миграций, приведем несколько примеров использования
 
 <ruby>
@@ -42,9 +37,8 @@ class CreateProducts < ActiveRecord::Migration
 end
 </ruby>
 
-This migration adds a table called +products+ with a string column called +name+ and a text column called +description+. A primary key column called +id+ will also be added, however since this is the default we do not need to ask for this. Данная миграция добавляет таблицу +products+ со строковым полем +name+ и текстовым полем +description+. The timestamp columns +created_at+ and +updated_at+ which Active Record populates automatically will also be added. Reversing this migration is as simple as dropping the table. Timestamp поля +created_at+ и +updated_at+ Active Record добавляет автоматически. Отменить данную миграцию тоже самое, что удалить таблицу.
+Данная миграция добавляет таблицу +products+ со строковым полем +name+ и текстовым полем +description+. Поля с первичным ключем называются +id+, и добавляются автоматически, так что нам не надо их определять вручную. Поля +created_at+ и +updated_at+ типа timestamp Active Record также добавляет автоматически. Отменить данную миграцию тоже самое, что удалить таблицу.
 
-Migrations are not limited to changing the schema. You can also use them to fix bad data in the database or populate new fields:
 Миграции не ограничивают изменение схемы. Вы также можете использовать их для того, что бы поправить плохие данные в БД или добавить новые поля:
 
 <ruby>
@@ -62,16 +56,14 @@ class AddReceiveNewsletterToUsers < ActiveRecord::Migration
 end
 </ruby>
 
-This migration adds a +receive_newsletter+ column to the +users+ table. We want it to default to +false+ for new users, but existing users are considered
-to have already opted in, so we use the User model to set the flag to +true+ for existing users. Данная миграция добавляет поле +receive_newsletter+ в таблицу  +users+. Мы хотим сделать его равным +false+ по умолчанию для новых пользователей, но для существующих равным +true+.
-NOTE: Some "caveats":#using-models-in-your-migrations apply to using models in your migrations.
+Данная миграция добавляет поле +receive_newsletter+ в таблицу  +users+. Мы хотим сделать его равным +false+ по умолчанию для новых пользователей, но для существующих равным +true+.
+NOTE: Есть некоторые "caveats":#using-models-in-your-migrations использования моделей в миграциях.
 
 h4. Миграции - класс
 
-A migration is a subclass of <tt>ActiveRecord::Migration</tt> that implements two class methods: +up+ (perform the required transformations) and +down+ (revert them). Миграция подкласс класса <tt>ActiveRecord::Migration</tt>, который осуществляет два метода: +up+ (выполнение необходимых преобразований) и +down+ (отмена преобразований).
+Миграция подкласс класса <tt>ActiveRecord::Migration</tt>, который осуществляет два метода: +up+ (выполнение необходимых преобразований) и +down+ (отмена преобразований).
 
-Active Record provides methods that perform common data definition tasks in a database independent way (you'll read about them in detail later):
-Active Record обеспечивает методы, которые выполняют общие задачи определения данных в базе данных независимый путь (Вы будете читать о них подробно позже):
+Active Record обеспечивает методы, которые выполняют общие задачи определения данных в базе данных независимым путем (Вы можете прочитать о них подробно позже):
 
 * +create_table+
 * +change_table+
@@ -83,39 +75,42 @@ Active Record обеспечивает методы, которые выполн
 * +add_index+
 * +remove_index+
 
-If you need to perform tasks specific to your database (for example create a "foreign key":#active-record-and-referential-integrity constraint) then the +execute+ function allows you to execute arbitrary SQL. A migration is just a regular Ruby class so you're not limited to these functions. For example after adding a column you could write code to set the value of that column for existing records (if necessary using your models).
+Если вам необходимо определить спесифические даные для БД (например, создать "внешний ключ":#active-record-and-referential-integrity), тогда необходимо тспользовать функцию +execute+, которая позволяет Вам выполнять произвольный SQL. Например после добавления столбца Вы можете написать код, чтобы установить значение этого поля для существующих записей (в случае необходимости использовать Ваши модели).
 
-On databases that support transactions with statements that change the schema (such as PostgreSQL or SQLite3), migrations are wrapped in a transaction. If the database does not support this (for example MySQL) then when a migration fails the parts of it that succeeded will not be rolled back. You will have to unpick the changes that were made by hand.
+В СУБД, которые поддерживают транзакции (такие как PostgreSQL или SQLite3), миграции обернуты в транзакции. Если СУБД не поддерживает транзакции (например, MySQL) и миграция выполнилась не полностью, тогда БД не вернется в исходное состояние. Вы должны будете откатить изменения вручную.
 
-h4. What's in a Name
+h4. What's in a Name Именование транзакций
 
-Migrations are stored in files in +db/migrate+, one for each migration class. The name of the file is of the form +YYYYMMDDHHMMSS_create_products.rb+, that is to say a UTC timestamp identifying the migration followed by an underscore followed by the name of the migration. The migration class' name must match (the camelcased version of) the latter part of the file name. For example +20080906120000_create_products.rb+ should define +CreateProducts+ and +20080906120001_add_details_to_products.rb+ should define +AddDetailsToProducts+. If you do feel the need to change the file name then you <em>have to</em> update the name of the class inside or Rails will complain about a missing class.
+Миграции сохраняютя в файлах в папке +db/migrate+, для каждого класса миграции. Название файла имеет форму +YYYYMMDDHHMMSS_create_products.rb +, дата/время в формате UTC, далее через подчеркивание название миграции. Имя класса миграции должно соответствовать (camelcased версии) последней части имени файла. Например +20080906120000_create_products.rb + определяет +CreateProducts +, и +20080906120001_add_details_to_products.rb + определяет +AddDetailsToProducts +. Если Вы действительно хотите поменять имя файла тогда, Вы <их>должны</их>, обновить название класса внутри, в противном случае Rails будет выдавать ошибку на недостающий класс.
 
-Internally Rails only uses the migration's number (the timestamp) to identify them. Prior to Rails 2.1 the migration number started at 1 and was incremented each time a migration was generated. With multiple developers it was easy for these to clash requiring you to rollback migrations and renumber them. With Rails 2.1 this is largely avoided by using the creation time of the migration to identify them. You can revert to the old numbering scheme by setting +config.active_record.timestamped_migrations+ to +false+ in +config/environment.rb+.
+Внутренне Rails использует только порядок миграции (timestamp), чтобы идентифицировать их. До Rails 2.1 порядок миграций начиналось с 1 и увеличивалось каждый раз, когда была произведена миграция. Если разработчиков много для них было легко столкнуться, требуя Вас к перемещениям обратной перемотки и перенумеровать их. Начиная с Rails 2.1 этого в значительной степени избегают путем использовании времени создания миграции, для их идентификации. Вы можете вернуться к старой схеме нумерации, устанавливая +config.active_record.timestamped_migrations + в значение +false + в файле +config/environment.rb +.
 
 The combination of timestamps and recording which migrations have been run allows Rails to handle common situations that occur with multiple developers.
+Комбинация timestamps и регистрации, какими перемещениями управляли, позволяет Рельсам обращаться с общими ситуациями, которые происходят с многократными разработчиками.
 
 For example Alice adds migrations +20080906120000+ and +20080906123000+ and Bob adds +20080906124500+ and runs it. Alice finishes her changes and checks in her migrations and Bob pulls down the latest changes. Rails knows that it has not run Alice's two migrations so +rake db:migrate+ would run them (even though Bob's migration with a later timestamp has been run), and similarly migrating down would not run their +down+ methods.
+Например Элис добавила миграцию +20080906120000 + и +20080906123000 +, и Боб добавил +20080906124500 + и запускает ее. Элис заканчивает свои изменения и фиксирует их в миграциях, и Боб сбрасывает последние изменения. Rails knows that it has not run Alice’s two migrations so rake db:migrate would run them (even though Bob’s migration with a later timestamp has been run), and similarly migrating down would not run their down methods. 
 
 Of course this is no substitution for communication within the team. For example, if Alice's migration removed a table that Bob's migration assumed to exist, then trouble would certainly strike.
+Конечно это не замена для общения в пределах команды. Например, если бы миграция Элис удаляла таблицу, которую Бобина миграция предполагала как, существовующую ??? then trouble would certainly strike.
 
-h4. Changing Migrations
+h4. Изменение миграций
 
-Occasionally you will make a mistake when writing a migration. If you have already run the migration then you cannot just edit the migration and run the migration again: Rails thinks it has already run the migration and so will do nothing when you run +rake db:migrate+. You must rollback the migration (for example with +rake db:rollback+), edit your migration and then run +rake db:migrate+ to run the corrected version.
+Иногда возможны ошибки при написании миграции. Если Вы уже выполнили миграцию тогда, Вы не можете просто отредактировать миграцию и выполнить ее снова: Rails думают, что это уже выполненная миграцию и ничего не сделает, когда Вы выполняете +rake db:migrate +. Вы должны откатить миграцию (например с +rake db:rollback +), отредактировать Вашу миграцию и затем выполнить +rake db:migrate +, чтобы выполнить исправленную версию.
 
-In general editing existing migrations is not a good idea: you will be creating extra work for yourself and your co-workers and cause major headaches if the existing version of the migration has already been run on production machines. Instead you should write a new migration that performs the changes you require. Editing a freshly generated migration that has not yet been committed to source control (or more generally which has not been propagated beyond your development machine) is relatively harmless. Just use some common sense.
+В общем редактирирование существующих миграций не хорошая идея: Вы будете создавать дополнительную работу для вас и Ваших сотрудников и вызывать головные боли, если существующая версия миграции была уже выполнена на промышленных машинах. Вместо этого Вы должны написать новую миграцию, которая выполняет изменения, которые Вам необходимы. Редактирование недавно сгенерированной миграции, которая еще не была закоммичена (или более широко - не была размножена вне Вашей машины разработки) относительно безопасно. Только используйте некоторый здравый смысл.
 
-h3. Creating a Migration
+h3. Создание миграции
 
-h4. Creating a Model
+h4. Создание модели
 
-The model and scaffold generators will create migrations appropriate for adding a new model. This migration will already contain instructions for creating the relevant table. If you tell Rails what columns you want then statements for adding those will also be created. For example, running
+Модель и генераторы эшафота создадут миграции, соответствующие для того, чтобы добавить новую модель. Эта миграция уже будет содержать инструкции для того, чтобы создать соответствующую таблицу. Если Вы говорите Rails, какие столбцы Вы хотите создать, путем добавления соотвествующих инструкций, то они будут также созданы. Например, если выполнить
 
 <shell>
 ruby script/generate model Product name:string description:text
 </shell>
 
-will create a migration that looks like this
+будет создана миграция, которая выглядит следующим образом
 
 <ruby>
 class CreateProducts < ActiveRecord::Migration
@@ -134,18 +129,17 @@ class CreateProducts < ActiveRecord::Migration
 end
 </ruby>
 
-You can append as many column name/type pairs as you want. By default +t.timestamps+ (which creates the +updated_at+ and +created_at+ columns that
-are automatically populated by Active Record) will be added for you.
+Вы можете добавить столько столбцов пар name/type, сколько Вы хотите. По умолчанию +t.timestamps + (который создает столбцы +updated_at + и +created_at + автоматически заполнены Active Record), также будут добавлен.
 
-h4. Creating a Standalone Migration
+h4. Создание Автономной Миграции
 
-If you are creating migrations for other purposes (for example to add a column to an existing table) then you can use the migration generator:
+Если Вы создаете миграции для других целей (например, чтобы добавить столбец к существующей таблице) тогда, Вы можете использовать генератор миграции:
 
 <shell>
 ruby script/generate migration AddPartNumberToProducts
 </shell>
 
-This will create an empty but appropriately named migration:
+Это создаст пустую миграцию с соответствующим названием :
 
 <ruby>
 class AddPartNumberToProducts < ActiveRecord::Migration
@@ -158,12 +152,13 @@ end
 </ruby>
 
 If the migration name is of the form "AddXXXToYYY" or "RemoveXXXFromYYY" and is followed by a list of column names and types then a migration containing the appropriate +add_column+ and +remove_column+ statements will be created.
+Если название миграции будет иметь форму "AddXXXToYYY" или "RemoveXXXFromYYY" и будет сопровождаться списком названий столбца, тогда миграция будет содержать соответственно +add_column + и +remove_column +, операторы.
 
 <shell>
 ruby script/generate migration AddPartNumberToProducts part_number:string
 </shell>
 
-will generate
+сгенерирует
 
 <ruby>
 class AddPartNumberToProducts < ActiveRecord::Migration
@@ -177,13 +172,13 @@ class AddPartNumberToProducts < ActiveRecord::Migration
 end
 </ruby>
 
-Similarly,
+Точно так же,
 
 <shell>
 ruby script/generate migration RemovePartNumberFromProducts part_number:string
 </shell>
 
-generates
+сгенерирует
 
 <ruby>
 class RemovePartNumberFromProducts < ActiveRecord::Migration
@@ -197,13 +192,13 @@ class RemovePartNumberFromProducts < ActiveRecord::Migration
 end
 </ruby>
 
-You are not limited to one magically generated column, for example
+Вы не ограничены одним волшебно сгенерированным столбцом, например
 
 <shell>
 ruby script/generate migration AddDetailsToProducts part_number:string price:decimal
 </shell>
 
-generates
+сгенерирует
 
 <ruby>
 class AddDetailsToProducts < ActiveRecord::Migration
@@ -219,15 +214,15 @@ class AddDetailsToProducts < ActiveRecord::Migration
 end
 </ruby>
 
-As always, what has been generated for you is just a starting point. You can add or remove from it as you see fit.
+Как всегда, то, что было сгенерировано для Вас, является только отправной точкой. Вы можете добавить или удалить из миграции, как Вы считаете необходимвм.
 
-h3. Writing a Migration
+h3. Написание Миграций
 
-Once you have created your migration using one of the generators it's time to get to work!
+Как только Вы создали свою миграцию, используя один из генераторов, пришло время чтобы работать!
 
-h4. Creating a Table
+h4. Создание таблицы
 
-Migration method +create_table+ will be one of your workhorses. A typical use would be
+Метод миграции +create_table + будет одной из Ваших рабочих лошадок. Типичное использование:
 
 <ruby>
 create_table :products do |t|
@@ -235,9 +230,10 @@ create_table :products do |t|
 end
 </ruby>
 
-which creates a +products+ table with a column called +name+ (and as discussed below, an implicit +id+ column).
+которое создает таблицу +products+ со столбцом +name + (и как обсуждено ниже, неявный столбец +id+).
 
 The object yielded to the block allows you create columns on the table. There are two ways of doing this: The first (traditional) form looks like
+Объект, к которому приводят блоку, позволяет, что Вы создаете столбцы на таблице. Есть два способа сделать это: первая (традиционная) форма
 
 <ruby>
 create_table :products do |t|
@@ -245,7 +241,7 @@ create_table :products do |t|
 end
 </ruby>
 
-the second form, the so called "sexy" migration, drops the somewhat redundant +column+ method. Instead, the +string+, +integer+, etc. methods create a column of that type. Subsequent parameters are the same.
+вторая форма, так называемая "сексуальная" миграция, опускает несколько избыточный +column+ метод. Вместо этого +string+, +integer+, и т.д. методы создают столбец того типа. Последующие параметры - такие же.
 
 <ruby>
 create_table :products do |t|
@@ -253,7 +249,7 @@ create_table :products do |t|
 end
 </ruby>
 
-By default +create_table+ will create a primary key called +id+. You can change the name of the primary key with the +:primary_key+ option (don't forget to update the corresponding model) or if you don't want a primary key at all (for example for a HABTM join table) you can pass +:id => false+. If you need to pass database specific options you can place an SQL fragment in the +:options+ option. For example
+По умолчанию +create_table+ создаст первичный ключ, названный +id+. Вы можете поменять имя первичного ключа - +:primary_key+ опцией (не забывайте обновлять соответствующую модель), или если Вы не хотите иметь первичный ключ вообще (например для таблицы объединения HABTM), Вы можете написать +:id => false+. Если Вам необходимо передать в базу данных специфические опции, Вы можете поместить фрагмент SQL в +:options + опция. Например
 
 <ruby>
 create_table :products, :options => "ENGINE=BLACKHOLE" do |t|
@@ -261,11 +257,11 @@ create_table :products, :options => "ENGINE=BLACKHOLE" do |t|
 end
 </ruby>
 
-will append +ENGINE=BLACKHOLE+ to the SQL statement used to create the table (when using MySQL the default is +ENGINE=InnoDB+).
+применит +ENGINE=BLACKHOLE+ к оператору SQL, используемому, чтобы составить таблицу (для MySQL, значение по умолчанию - +ENGINE=InnoDB+).
 
-The types supported by Active Record are +:primary_key+, +:string+, +:text+, +:integer+, +:float+, +:decimal+, +:datetime+, +:timestamp+, +:time+, +:date+, +:binary+, +:boolean+.
+Типы, которые поддерживает Active Record: +:primary_key+, +:string+, +:text+, +:integer+, +:float+, +:decimal+, +:datetime+, +:timestamp+, +:time+, +:date+, +:binary +, +:boolean +.
 
-These will be mapped onto an appropriate underlying database type, for example with MySQL +:string+ is mapped to +VARCHAR(255)+. You can create columns of types not supported by Active Record when using the non-sexy syntax, for example
+Они будут отображены на соответствующий основной тип базы данных, например с MySQL +:string+ отображен к +VARCHAR (255)+. Вы можете создать столбцы типов, не поддерживающие Active Record, используя несексуальный синтаксис, например
 
 <ruby>
 create_table :products do |t|
@@ -273,11 +269,12 @@ create_table :products do |t|
 end
 </ruby>
 
-This may however hinder portability to other databases.
+Это может однако препятствовать переносимости в другие базы данных.
 
-h4. Changing Tables
+h4. Изменение таблиц
 
 A close cousin of +create_table+ is +change_table+, used for changing existing tables. It is used in a similar fashion to +create_table+ but the object yielded to the block knows more tricks. For example
+Близкий кузен +create_table+ является +change_table+, применяемый для того, чтобы изменить существующие таблицы. Он используется подобным образом, как и  +create_table+, но объект, к которому приводят блоку, знает больше уловок. Например
 
 <ruby>
 change_table :products do |t|
@@ -287,7 +284,7 @@ change_table :products do |t|
   t.rename :upccode, :upc_code
 end
 </ruby>
-removes the +description+ and +name+ columns, creates a +part_number+ column and adds an index on it. Finally it renames the +upccode+ column.   This is the same as doing
+удаляет столбцы +description+ и +name+, создает столбец +part_number + и добавляет индекс для него. Наконец, он переименовывает столбец +upccode+. Это то же самое, что и 
 
 <ruby>
 remove_column :products, :description
@@ -297,27 +294,28 @@ add_index :products, :part_number
 rename_column :products, :upccode, :upc_code
 </ruby>
 
-You don't have to keep repeating the table name and it groups all the statements related to modifying one particular table. The individual transformation names are also shorter, for example +remove_column+ becomes just +remove+ and +add_index+ becomes just +index+.
+Вы не должны повторять название таблицы, и оно группирует все операторы, связанные с изменением одной конкретной таблицы. Индивидуальные названия преобразований также более коротки, например +remove_column+ становится +remove+, и +add_index+ становится +index+.
 
-h4. Special Helpers
+h4. Special Helpers Специальные помощники
 
 Active Record provides some shortcuts for common functionality. It is for example very common to add both the +created_at+ and +updated_at+ columns and so there is a method that does exactly that:
+Active Record поддерживает некоторые ярлыки для общих функциональных возможностей. Например очень распространено добавлять столбцы +created_at+ и +updated_at+, таким образом есть метод, который делает это:
 
 <ruby>
 create_table :products do |t|
   t.timestamps
 end
 </ruby>
-will create a new products table with those two columns (plus the +id+ column) whereas
+создаст новую таблицу products с теми двумя столбцами (плюс столбец +id+) тогда как
 
 <ruby>
 change_table :products do |t|
   t.timestamps
 end
 </ruby>
-adds those columns to an existing table.
+добавляют эти столбцы к существующей таблице.
 
-The other helper is called +references+ (also available as +belongs_to+). In its simplest form it just adds some readability
+Другой помощник называется +references + (также доступный как +belongs_to+). В его самой простой форме добавляет некоторую удобочитаемость
 
 <ruby>
 create_table :products do |t|
@@ -325,24 +323,24 @@ create_table :products do |t|
 end
 </ruby>
 
-will create a +category_id+ column of the appropriate type. Note that you pass the model name, not the column name. Active Record adds the +_id+ for you. If you have polymorphic +belongs_to+ associations then +references+ will add both of the columns required:
+создаст столбец +category_id+ соответствующего типа. Помните, что Вы передаете название модели, а не название столбца. Active Record добавляет +_id + для Вас. Если у Вас будет составной +belongs_to+, тогда ассоциация +references+ добавит оба из требуемых столбцов:
 
 <ruby>
 create_table :products do |t|
   t.references :attachment, :polymorphic => {:default => 'Photo'}
 end
 </ruby>
-will add an +attachment_id+ column and a string +attachment_type+ column with a default value of 'Photo'.
+добавит столбец +attachment_id+ и строковый столбец +attachment_type+ со значением по умолчанию 'Photo'.
+\
+NOTE: помощник +references + фактически не создает ограничения внешнего ключа для Вас. Вы должны будете использовать +execute+ для этого или плагин, который добавляет "поддержку внешнего ключа":#active-record-and-referential-integrity.
 
-NOTE: The +references+ helper does not actually create foreign key constraints for you. You will need to use +execute+ for that or a plugin that adds "foreign key support":#active-record-and-referential-integrity.
+Если помощники, поддерживаемых Active Record, не достаточно, Вы можете использовать +execute+ функцию, чтобы выполнить произвольный SQL.
 
-If the helpers provided by Active Record aren't enough you can use the +execute+ function to execute arbitrary SQL.
+Для более детального изучения и примеров отдельных методов, используйте API документацию "<tt>ActiveRecord::ConnectionAdapters::SchemaStatements</tt>":http://api.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/SchemaStatements.html  (который обеспечивает методы, доступные для up и down методов),  "<tt>ActiveRecord::ConnectionAdapters::TableDefinition</tt>":http://api.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/TableDefinition.html (which provides the methods available on the object yielded by +create_table+) and(который описывает методы, доступные на объекте, к которому приводит create_table), и "<tt>ActiveRecord::ConnectionAdapters::Table</tt>":http://api.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/Table.html (which provides the methods available on the object yielded by +change_table+).
 
-For more details and examples of individual methods check the API documentation, in particular the documentation for "<tt>ActiveRecord::ConnectionAdapters::SchemaStatements</tt>":http://api.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/SchemaStatements.html (which provides the methods available in the +up+ and +down+ methods),  "<tt>ActiveRecord::ConnectionAdapters::TableDefinition</tt>":http://api.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/TableDefinition.html (which provides the methods available on the object yielded by +create_table+) and "<tt>ActiveRecord::ConnectionAdapters::Table</tt>":http://api.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/Table.html (which provides the methods available on the object yielded by +change_table+).
+h4. Написание +down+ методов
 
-h4. Writing Your +down+ Method
-
-The +down+ method of your migration should revert the transformations done by the +up+ method. In other words the database schema should be unchanged if you do an +up+ followed by a +down+. For example if you create a table in the +up+ method you should drop it in the +down+ method. It is wise to do things in precisely the reverse order to in the +up+ method. For example
+The +down+ method of your migration should revert the transformations done by the +up+ method. In other words the database schema should be unchanged if you do an +up+ followed by a +down+. For example if you create a table in the +up+ method you should drop it in the +down+ method. It is wise to do things in precisely the reverse order to in the +up+ method. +down+ метод Вашей миграции должен вернуть преобразования, сделанные +up+ методом. Другими словами схема базы данных должна остаться неизменной, если Вы выполняете последовательно +up+ и +down+ методы. Например, если Вы создаете таблицу в +up+ методе, Вы должны удалить ее в +down+ методе. Мудро откатывать изменения точно в обратный порядоке к +up+ методу. Например
 
 <ruby>
 class ExampleMigration < ActiveRecord::Migration
@@ -351,7 +349,7 @@ class ExampleMigration < ActiveRecord::Migration
     create_table :products do |t|
       t.references :category
     end
-    #add a foreign key
+    #добавляем foreign key
     execute <<-SQL
       ALTER TABLE products
         ADD CONSTRAINT fk_products_categories
@@ -372,62 +370,60 @@ class ExampleMigration < ActiveRecord::Migration
   end
 end
 </ruby>
-Sometimes your migration will do something which is just plain irreversible, for example it might destroy some data. In cases like those when you can't reverse the migration you can raise +IrreversibleMigration+ from your +down+ method. If someone tries to revert your migration an error message will be
-displayed saying that it can't be done.
+Иногда Ваша миграция сделает такое, что является необратимым, например она могла удалить некоторые данные. В случаях как те, когда Вы не можете полностью откатить миграцию, Вы можете поднять +IrreversibleMigration+ в +down+ методе. Если кто-то попытается откатить Вашу миграцию, то получит сообщение об ошибке, в котором будет сказано, что операция не выполнится.
 
 
-h3. Running Migrations
+h3. Запуск миграции
 
-Rails provides a set of rake tasks to work with migrations which boils down to running certain sets of migrations. The very first migration related rake task you use will probably be +db:migrate+. In its most basic form it just runs the +up+ method for all the migrations that have not yet been run. If there are no such migrations it exits.
+Rails обеспечивают ряд задач rake для работы с миграциями, который сводится к выполнению определенных наборов миграций. Самая первая миграция связанная с rake, которую Вы используете, вероятно будет +db:migrate+. В его наиболее простой форме выполняет только +up+ методы для всех миграций, которые еще не были выполнены. Если нет таких миграций - выходит.
 
-Note that running the +db:migrate+ also invokes the +db:schema:dump+ task, which will update your db/schema.rb file to match the structure of your database.
+Отметьте, что выполнение +db:migrate+ также вызывает +db:schema:dump+ задачу, которая обновит Ваш db/schema.rb файл, чтобы соответствовать структуре Вашей базы данных.
 
-If you specify a target version, Active Record will run the required migrations (up or down) until it has reached the specified version. The
-version is the numerical prefix on the migration's filename. For example to migrate to version 20080906120000 run
+Если Вы определите целевую версию, то Active Record выполнит необходимые миграции (вверх или вниз), пока он не достигнет указанной версии. Версия - числовой префикс в имени файла миграции. Например переместиться к выполненной версии 20080906120000
 
 <shell>
 rake db:migrate VERSION=20080906120000
 </shell>
 
-If this is greater than the current version (i.e. it is migrating upwards) this will run the +up+ method on all migrations up to and including 20080906120000, if migrating downwards this will run the +down+ method on all the migrations down to, but not including, 20080906120000.
+Если это будет больше чем последняя версия (то есть она перемещается вверх), то это выполнит +up+ метод на всех миграциях включая 20080906120000, если перемещение вниз это выполнит +down+ метод на всех миграциях вниз, но не включая 20080906120000.
 
-h4. Rolling Back
+h4. Откат изменений
 
-A common task is to rollback the last migration, for example if you made a mistake in it and wish to correct it. Rather than tracking down the version number associated with the previous migration you can run
+Общая задача - откат последней миграции, например если Вы сделали ошибку в миграции и хотите исправить ее. Вместо того, чтобы искать номер версии связанной с предыдущей миграцией, которую Вы можете выполнить
 
 <shell>
 rake db:rollback
 </shell>
 
-This will run the +down+ method from the latest migration. If you need to undo several migrations you can provide a +STEP+ parameter:
+Это выполнит +down+ метод от последней миграции. Если необходимо отменить несколько миграций, Вы можете использовать параметр +STEP+:
 
 <shell>
 rake db:rollback STEP=3
 </shell>
 
-will run the +down+ method from the last 3 migrations.
+выполнит +down+ метод от последних 3 миграций.
 
-The +db:migrate:redo+ task is a shortcut for doing a rollback and then migrating back up again. As with the +db:rollback+ task you can use the +STEP+ parameter if you need to go more than one version back, for example
++db:migrate:redo+ задача является ярлыком для того, чтобы сделать откат и затем выполнить миграцию. Как с +db:rollback+ задачей Вы можете использовать параметр +STEP+, если Вы должны откатить больше чем на одну версию назад, например
 
 <shell>
 rake db:migrate:redo STEP=3
 </shell>
 
-Neither of these Rake tasks do anything you could not do with +db:migrate+, they are simply more convenient since you do not need to explicitly specify the version to migrate to.
+Ни одна из этих задач Rake не делает ничего, что Вы не могли бы сделать с +db:migrate+, они просто более удобны, так как Вы не должны явно определять версию, чтобы переместиться к ней.
 
-Lastly, the +db:reset+ task will drop the database, recreate it and load the current schema into it.
+Наконец, +db:reset+ задача удалит базу данных, обновит ее и загрузит текущую схему.
 
-NOTE: This is not the same as running all the migrations - see the section on "schema.rb":#schema-dumping-and-you.
+NOTE: Это не то же самое, что выполнение всех миграций - см. секцию на "schema.rb": #schema-dumping-and-you.
 
 h4. Being Specific
 
-If you need to run a specific migration up or down the +db:migrate:up+ and +db:migrate:down+ tasks will do that. Just specify the appropriate version and the corresponding migration will have its +up+ or +down+ method invoked, for example
+Если Вы должны выполнить определенную миграцию вверх или вниз +db:migrate:up+ и +db:migrate:down+, задачи сделают это. Только определите соответствующую версию, и у соответствующей миграции будет свой +up+ или +down+ метод, например
 
 <shell>
 rake db:migrate:up VERSION=20080906120000
 </shell>
 
-will run the +up+ method from the 20080906120000 migration. These tasks check whether the migration has already run, so for example +db:migrate:up VERSION=20080906120000+ will do nothing if Active Record believes that 20080906120000 has already been run.
+выполнит +up+ метод начиная с миграции 20080906120000. Эти задачи проверяют, запускалась ли уже миграция, так что например +db:migrate:up VERSION=20080906120000+ ничего не сделает, если Active Record полагает, что миграция 20080906120000 была уже выполнена.
 
 h4. Being Talkative
 
